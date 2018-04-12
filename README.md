@@ -19,14 +19,14 @@ java  -Dlog4j.configurationFile=config\log4j2.xml -jar bgs-data-app.jar shutdown
 
 alternate method:
 use postman or other http request tool and perform a POST to
-http://localhost:<portnumber>/actuator/shutdown
+http://localhost:8086/actuator/shutdown
 
 logging: 
 logging is done in logs folder. Logfile will be rotated
 
 calling the app: 
-http://localhost:<portnumber>/BGSSync?range=<number>
+http://localhost:8086/BGSSync?range=<number>
 
 health: 
-http://localhost:<portnumber>/actuator/health
+http://localhost:8086/actuator/health
 
