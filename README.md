@@ -1,24 +1,32 @@
 # bgsDataSync
 BGS data sync tool for our Elite Dangerous wing
 
-start app: 
-java -jar bgs-data-app.jar 
+start app:
+from  the bgs-data-app folder:
+java -Dlog4j.configurationFile=config\log4j2.xml  -jar lib\bgs-data-app.jar 
+or javaw -Dlog4j.configurationFile=config\log4j2.xml  -jar lib\bgs-data-app.jar 
+(prompt returns and no logging in console. you can close the console)
 
-start app with other port than 8080: 
-java -jar bgs-data-app.jar --server.port=<portnumber>
+portnumber: 
+in config/application.properties the server.port number is defined. 
+Change this if the app needs to run on a different port. 
 
 stop app: 
 java -jar bgs-data-app.jar shutdown 
 or 
-java -jar bgs-data-app.jar shutdown --server.port=<portnumber> 
+java  -Dlog4j.configurationFile=config\log4j2.xml -jar bgs-data-app.jar shutdown --server.port=<portnumber> 
+(the portdown for the shutdown cannot be fetched from the properties file)
+
+alternate method:
+use postman or other http request tool and perform a POST to
+http://localhost:<portnumber>/actuator/shutdown
 
 logging: 
 logging is done in logs folder. Logfile will be rotated
 
-running fire and forget: use javaw instead of java
-
-call: 
+calling the app: 
 http://localhost:<portnumber>/BGSSync?range=<number>
 
 health: 
 http://localhost:<portnumber>/actuator/health
+
