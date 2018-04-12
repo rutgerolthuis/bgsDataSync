@@ -44,9 +44,8 @@ public class SystemService {
     }
 
     public void buildSystemsMap(List<String> nearbySystemsList){
-        logger.info("Starting to get system data");
         for (String systemName : nearbySystemsList) {
-            logger.info("Getting data for: " + systemName);
+            logger.debug("Getting data for: " + systemName);
 
             String urlString = "";
             try {
@@ -58,10 +57,10 @@ public class SystemService {
             UriComponents uriComponents = UriComponentsBuilder.fromUriString(urlString).build(true);
 
             URI uri = uriComponents.toUri();
-            logger.info("URI : " + uri);
+            logger.debug("URI : " + uri);
 
             JSONObject systemObject = eliteBgsConsumer.getData(uri );
-            logger.info("SystemObject fetched : " + systemObject);
+            logger.debug("SystemObject fetched : " + systemObject);
             addSystemToDataSet(systemName,systemObject);
 
         }

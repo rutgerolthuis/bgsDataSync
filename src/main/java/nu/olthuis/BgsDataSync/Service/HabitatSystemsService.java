@@ -7,7 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -49,13 +48,13 @@ public class HabitatSystemsService {
             double distance = calculateDistanceFromKolaga(systemObject);
 
             if (distance <= referenceDistance ) {
-                logger.info("Adding system: " + systemObject.get("name") + " which is " + distance + " ly from Kolaga.");
-                logger.info("x: " + systemObject.get("x") + " y: " + systemObject.get("y")  + " z: " + systemObject.get("z") );
+                logger.debug("Adding system: " + systemObject.get("name") + " which is " + distance + " ly from Kolaga.");
+                logger.debug("x: " + systemObject.get("x") + " y: " + systemObject.get("y")  + " z: " + systemObject.get("z") );
                 nearbySystemsList.add(systemObject.get("name").toString());
             }
         });
 
-        logger.info("Added " + nearbySystemsList.size() + " systems to the nearby list.");
+        logger.debug("Added " + nearbySystemsList.size() + " systems to the nearby list.");
 
         return nearbySystemsList;
     }
@@ -65,10 +64,8 @@ public class HabitatSystemsService {
         try {
             URL loadedResource = this.getClass().getClassLoader().getResource("systems_populated.json");
             InputStream inputStream = loadedResource.openStream();
-//            File file = new ClassPathResource("systems_populated.json").getFile();
             JSONParser parser = new JSONParser();
             return (JSONArray) parser.parse(new InputStreamReader(inputStream, "UTF-8"));
-//            return (JSONArray) parser.parse(new FileReader(file));
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
@@ -87,10 +84,6 @@ public class HabitatSystemsService {
             return CalculatorService.calculateDistance(KolagaX,KolagaY,KolagaZ, x, y, z);
 
         } catch (Exception e) {
-            System.out.println(system);
-            System.out.println(system.get("x"));
-            System.out.println(system.get("y"));
-            System.out.println(system.get("z"));
             throw e;
         }
     }

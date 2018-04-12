@@ -20,7 +20,7 @@ public class EliteBgsConsumer {
 
 
     public JSONObject getData(URI uri )  {
-        logger.info("Data request received for : " + uri );
+        logger.debug("Data request received for : " + uri );
 
         RestTemplate restTemplate = new RestTemplate();
         String result = restTemplate.getForObject(uri, String.class);

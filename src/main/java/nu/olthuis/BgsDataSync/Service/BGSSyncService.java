@@ -24,7 +24,7 @@ public class BGSSyncService {
     private Map<String,JSONObject> factionsMap;
     private List<String> nearbySystemList;
     private Set<String> factionSet = new HashSet<>();
-
+    int myCounter = 0;
     @Autowired
     public BGSSyncService (SystemService systemService, FactionService factionService, HabitatSystemsService habitatSystemsService) {
 
@@ -41,15 +41,16 @@ public class BGSSyncService {
         // 2. get the system data for all the systems in the list
         // 3. get faction data (get the factions from the system lists and gather their data
         // 4. merge all into one big momma json object
-
+        logger.info("Data sync request started for all systems within " + range + " ly from Kolaga.");
         fillNearbySystems(range);
-        logger.info("Fill Nearby Systems done");
+        logger.debug("Fill Nearby Systems done");
         buildSystemData();
-        logger.info("Build system data done");
+        logger.debug("Build system data done");
         buildFactionData();
-        logger.info("Faction data build");
+        logger.debug("Faction data build");
         insertFactionDataInSystems();
-        logger.info("Factions inserted into systems");
+        logger.debug("Factions inserted into systems");
+        logger.info("Data sync request finished..");
 
         return mergeSystems();
 
@@ -58,13 +59,16 @@ public class BGSSyncService {
     private void fillNearbySystems(int referenceDistance) {
 
         nearbySystemList = habitatSystemsService.getNearbySystems(referenceDistance);
-        System.out.println("Found " + nearbySystemList.size() + " systems within " + referenceDistance + " ly of Kolaga. ");
     }
 
     @SuppressWarnings("unchecked")
     private void insertFactionDataInSystems() {
-
+        logger.info("Processing " + factionsMap.size() + " factions");
         factionsMap.forEach((factionName,factionObject) -> {
+
+            String dateUpdated = (String) factionObject.get("updated_at");
+            String government = (String) factionObject.get("government");
+            String allegiance = (String) factionObject.get("allegiance");
 
             JSONArray factionPresence = (JSONArray) factionObject.get("faction_presence");
             JSONArray factionHistory = (JSONArray) factionObject.get("history");
@@ -73,12 +77,12 @@ public class BGSSyncService {
             factionPresenceIterator.forEachRemaining(localFactionPresence -> {
 
                 String systemNameForLocalFaction = (String) ((JSONObject) localFactionPresence).get("system_name");
-                logger.info("Trying to add the faction info for system: " + systemNameForLocalFaction +  " and faction: " + factionName );
+                logger.debug("Trying to add the faction info for system: " + systemNameForLocalFaction +  " and faction: " + factionName );
 
                 JSONObject systemObject = systemsMap.get(systemNameForLocalFaction);
                 if (systemObject == null) {
                     // very well possible that the faction is in a system we do not watch...
-                    logger.info("No system object found for system: " +  systemNameForLocalFaction + "; skipping.");
+                    logger.debug("No system object found for system: " +  systemNameForLocalFaction + "; skipping.");
                     return;
                 }
 
@@ -86,15 +90,16 @@ public class BGSSyncService {
                 Iterator<?> factionsFromSystemIterator = factionsFromSystem.iterator();
 
                 factionsFromSystemIterator.forEachRemaining(systemFaction -> {
-
+                    myCounter++;
                     if (((JSONObject) systemFaction).get("name").toString().equals(factionName)) {
 
-                        logger.info("Writing localFactionPresence and history for faction : " + factionName + " in system " + systemNameForLocalFaction);
-                        //System.out.println(systemFaction);
-                        //System.out.println(localFactionPresence);
-                        //System.out.println(factionHistory);
+                        logger.debug("Writing localFactionPresence and history for faction : " + factionName + " in system " + systemNameForLocalFaction);
+                        ((JSONObject)systemFaction).put("updated_at",dateUpdated);
+                        ((JSONObject)systemFaction).put("government",government);
+                        ((JSONObject)systemFaction).put("allegiance",allegiance);
 
                         ((JSONObject)systemFaction).put("presence",localFactionPresence);
+
                         ((JSONObject) systemFaction).put("history",factionHistory);
 
                     }
@@ -127,9 +132,7 @@ public class BGSSyncService {
 
     private void buildFactionData() {
         getFactionsFromSystemList();
-        logger.info("Fetched all the factions from the systemlist: " + factionSet.size());
         getFactionData();
-        logger.info("Fetched all the faction data : " + factionsMap.size());
 
     }
 
@@ -144,9 +147,9 @@ public class BGSSyncService {
     private void buildSystemData () {
 
         systemService.buildSystemsMap(nearbySystemList);
-        System.out.println("System data build");
         systemsMap = systemService.getSystemsMap();
-        System.out.println("Fetched " +  systemsMap.size() + " systems with data");
+
+        logger.info("Fetched " +  systemsMap.size() + " systems.");
     }
 
 }

@@ -35,7 +35,7 @@ public class FactionService {
         Map<String,JSONObject> factionsMap = new HashMap<>();
         factionSet.forEach(factionName -> {
 
-            logger.info("Getting data for faction: " + factionName);
+            logger.debug("Getting data for faction: " + factionName);
             Boolean isPlayerFaction = getIsPlayerFaction( factionName);
             JSONObject factionObject = getFactionObject(factionName );
             factionObject.put("is_player_faction",isPlayerFaction);
