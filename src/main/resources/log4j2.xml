@@ -24,7 +24,7 @@
 
     </Appenders>
     <Loggers>
-        <Logger name="nu.olthuis.BgsDataSync" level="INFO" additivity="false">
+        <Logger name="nu.olthuis.BgsDataSync" level="DEBUG" additivity="false">
             <AppenderRef ref="ConsoleAppender" />
             <AppenderRef ref="FileAppender" />
         </Logger>

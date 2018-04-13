@@ -15,6 +15,7 @@ public class FactionsFromSystemsExtractor {
 
         systemsMap.forEach((systemName,systemObject)-> {
             JSONArray factionArray = (JSONArray) systemObject.get("factions");
+
             Iterator<JSONObject> factionsIterator = factionArray.iterator();
             while (factionsIterator.hasNext()) {
                 JSONObject factionObject = factionsIterator.next();

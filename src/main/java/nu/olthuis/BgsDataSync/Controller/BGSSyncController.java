@@ -20,9 +20,10 @@ public class BGSSyncController {
     }
 
     @RequestMapping("/BGSSync")
-    public JSONObject bgsSync(@RequestParam(value="range", defaultValue="10") int range) {
+    public JSONObject bgsSync(@RequestParam(value="referenceSystem", defaultValue="Kolaga") String referenceSystem, @RequestParam(value="range", defaultValue="10") int range) {
 
-        return bgsSyncService.getBgsData(range);
+        JSONObject woei = bgsSyncService.getBgsData(referenceSystem,range);
+        return woei;
 
     }
 

@@ -28,7 +28,7 @@ public class Application
                 URL url = new URL(shutdownUrl);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 con.setRequestMethod("POST");
-                con.connect();
+                con.getResponseCode();
                 System.out.println("shutting down app at" + shutdownUrl);
                 con.disconnect();
                 System.out.println("Shutdown successful");

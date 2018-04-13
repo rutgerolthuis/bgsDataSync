@@ -6,57 +6,73 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 public class HabitatSystemsService {
     private final static Logger logger = LogManager.getLogger(HabitatSystemsService.class);
 
-    private final double KolagaX;
-    private final double KolagaY;
-    private final double KolagaZ;
+    private double referenceX;
+    private double referenceY;
+    private double referenceZ;
 
-    @Autowired
-    public HabitatSystemsService(SystemService systemService) {
-        this.KolagaX = systemService.getKolagaX();
-        this.KolagaY = systemService.getKolagaY();
-        this.KolagaZ = systemService.getKolagaZ();
-    }
-
-    public List<String> getNearbySystems(int referenceDistance) {
-
-        return getNearbySystems("",referenceDistance);
-    }
     @SuppressWarnings("unchecked")
-    private List<String> getNearbySystems(String referenceSystem, int referenceDistance) {
+    public Map<String,JSONObject> getNearbySystems(String referenceSystem, int referenceDistance) {
 
-        logger.info("Getting all systems within " + referenceDistance + " from the reference system.");
+        logger.info("Getting all systems within " + referenceDistance + " from " + referenceSystem + " system.");
+        Map<String, JSONObject> habitatSystemsMap = createSystemMap(referenceSystem);
 
+        return getSystemsNearReferenceSystem(habitatSystemsMap,referenceSystem,referenceDistance);
+
+    }
+
+    private Map<String,JSONObject> getSystemsNearReferenceSystem(Map<String,JSONObject> habitatSystemsMap, String referenceSystem, int referenceDistance) {
+
+        Double distance;
+        Iterator<String> it = habitatSystemsMap.keySet().iterator();
+        while (it.hasNext()) {
+            String systemName = it.next();
+            JSONObject systemObject = habitatSystemsMap.get(systemName);
+            distance = calculateDistanceFromReferenceSystem(systemObject);
+            if (distance <=  referenceDistance) {
+                logger.debug("Adding system: " + systemObject.get("name") + " which is " + distance + " ly from " + referenceSystem);
+                logger.debug("x: " + systemObject.get("x") + " y: " + systemObject.get("y")  + " z: " + systemObject.get("z") );
+                systemObject.put("distance",distance);
+            }
+            else {it.remove();}
+        }
+
+        logger.debug("Added " + habitatSystemsMap.size() + " systems to the nearby list.");
+
+        return habitatSystemsMap;
+    }
+
+    private Map createSystemMap(String referenceSystem) {
         JSONArray systemsArray = getHabitatSystemsFromBigFile();
-        List<String> nearbySystemsList = new ArrayList<>();
+
+        Map<String,JSONObject> habitatSystemsMap = new HashMap<>();
 
         Objects.requireNonNull(systemsArray).forEach(system -> {
 
             JSONObject systemObject = (JSONObject) system;
-            double distance = calculateDistanceFromKolaga(systemObject);
+            String systemName =  systemObject.get("name").toString();
 
-            if (distance <= referenceDistance ) {
-                logger.debug("Adding system: " + systemObject.get("name") + " which is " + distance + " ly from Kolaga.");
-                logger.debug("x: " + systemObject.get("x") + " y: " + systemObject.get("y")  + " z: " + systemObject.get("z") );
-                nearbySystemsList.add(systemObject.get("name").toString());
+            if (systemName.equals(referenceSystem)) {
+
+                referenceX = getDoubleValue(systemObject.get("x"));
+                referenceY = getDoubleValue(systemObject.get("y"));
+                referenceZ = getDoubleValue(systemObject.get("z"));
             }
+
+            habitatSystemsMap.put(systemName,systemObject);
+
         });
 
-        logger.debug("Added " + nearbySystemsList.size() + " systems to the nearby list.");
-
-        return nearbySystemsList;
+        return habitatSystemsMap;
     }
 
     private JSONArray getHabitatSystemsFromBigFile() {
@@ -73,7 +89,7 @@ public class HabitatSystemsService {
         return null;
     }
 
-    private double calculateDistanceFromKolaga (JSONObject system) {
+    private double calculateDistanceFromReferenceSystem (JSONObject system) {
 
         try {
 
@@ -81,7 +97,7 @@ public class HabitatSystemsService {
             double y = getDoubleValue(system.get("y"));
             double z = getDoubleValue(system.get("z"));
 
-            return CalculatorService.calculateDistance(KolagaX,KolagaY,KolagaZ, x, y, z);
+            return CalculatorService.calculateDistance(referenceX,referenceY,referenceZ, x, y, z);
 
         } catch (Exception e) {
             throw e;
@@ -98,5 +114,7 @@ public class HabitatSystemsService {
 
         return value;
     }
+
+
 
 }
