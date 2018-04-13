@@ -22,9 +22,9 @@ public class BGSSyncService {
 
     private Map<String,JSONObject> systemsMap;
     private Map<String,JSONObject> factionsMap;
-    private List<String> nearbySystemList;
     private Set<String> factionSet = new HashSet<>();
-    int myCounter = 0;
+    private int myCounter = 0;
+
     @Autowired
     public BGSSyncService (SystemService systemService, FactionService factionService, HabitatSystemsService habitatSystemsService) {
 
@@ -34,15 +34,15 @@ public class BGSSyncService {
     }
 
 
-    public JSONObject getBgsData(int range) {
+    public JSONObject getBgsData(String referenceSystem, int range) {
 
         // this is the main procedure. The driver of them all
         // 1. get system list (which systems do we want to get data from?
         // 2. get the system data for all the systems in the list
         // 3. get faction data (get the factions from the system lists and gather their data
         // 4. merge all into one big momma json object
-        logger.info("Data sync request started for all systems within " + range + " ly from Kolaga.");
-        fillNearbySystems(range);
+        logger.info("Data sync request started for all systems within " + range + " ly from " + referenceSystem);
+        fillNearbySystems(referenceSystem,range);
         logger.debug("Fill Nearby Systems done");
         buildSystemData();
         logger.debug("Build system data done");
@@ -51,14 +51,14 @@ public class BGSSyncService {
         insertFactionDataInSystems();
         logger.debug("Factions inserted into systems");
         logger.info("Data sync request finished..");
-
-        return mergeSystems();
+        JSONObject blaat = mergeSystems(referenceSystem,range);
+        return blaat;
 
     }
 
-    private void fillNearbySystems(int referenceDistance) {
+    private void fillNearbySystems(String referenceSystem, int referenceDistance) {
 
-        nearbySystemList = habitatSystemsService.getNearbySystems(referenceDistance);
+        systemsMap = habitatSystemsService.getNearbySystems(referenceSystem, referenceDistance);
     }
 
     @SuppressWarnings("unchecked")
@@ -112,25 +112,32 @@ public class BGSSyncService {
     }
 
     @SuppressWarnings("unchecked")
-    private JSONObject mergeSystems() {
+    private JSONObject mergeSystems(String referenceSystem, int range) {
 
         JSONArray systemsArray = new JSONArray();
 
         systemsMap.forEach((sysName, systemObject) -> systemsArray.add( systemObject));
 
+        JSONObject bgsSystems = new JSONObject();
         JSONObject bgsDataOutput = new JSONObject();
         Date date = new Date();
 
         SimpleDateFormat sfd = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
-        bgsDataOutput.put("time", sfd.format(date) );
-        bgsDataOutput.put("Systems",systemsArray);
+        bgsSystems.put("time", sfd.format(date) );
+        bgsSystems.put("reference_system",referenceSystem);
+        bgsSystems.put("range",range);
+        bgsSystems.put("Systems",systemsArray);
 
-        return bgsDataOutput;
+        JSONObject outputObject = new JSONObject();
+        outputObject.put("docs",bgsSystems);
+
+        return outputObject;
 
     }
 
     private void buildFactionData() {
+
         getFactionsFromSystemList();
         getFactionData();
 
@@ -146,10 +153,10 @@ public class BGSSyncService {
 
     private void buildSystemData () {
 
-        systemService.buildSystemsMap(nearbySystemList);
-        systemsMap = systemService.getSystemsMap();
+        systemService.getEbgsSystemsMap(systemsMap);
 
         logger.info("Fetched " +  systemsMap.size() + " systems.");
+
     }
 
 }
